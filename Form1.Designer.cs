@@ -57,9 +57,9 @@
             lbTimer.BackColor = Color.Transparent;
             lbTimer.Font = new Font("Yu Gothic UI", 20F);
             lbTimer.ImageAlign = ContentAlignment.MiddleRight;
-            lbTimer.Location = new Point(553, 34);
+            lbTimer.Location = new Point(456, 34);
             lbTimer.Name = "lbTimer";
-            lbTimer.Size = new Size(221, 60);
+            lbTimer.Size = new Size(251, 90);
             lbTimer.TabIndex = 1;
             lbTimer.TextAlign = ContentAlignment.MiddleRight;
             // 
