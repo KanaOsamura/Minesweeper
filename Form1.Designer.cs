@@ -43,9 +43,9 @@
             // 
             btStart.BackColor = SystemColors.ButtonHighlight;
             btStart.Font = new Font("Yu Gothic UI", 14F);
-            btStart.Location = new Point(40, 34);
+            btStart.Location = new Point(70, 34);
             btStart.Name = "btStart";
-            btStart.Size = new Size(180, 60);
+            btStart.Size = new Size(270, 90);
             btStart.TabIndex = 0;
             btStart.Text = "START";
             btStart.UseVisualStyleBackColor = false;
@@ -57,7 +57,7 @@
             lbTimer.BackColor = Color.Transparent;
             lbTimer.Font = new Font("Yu Gothic UI", 20F);
             lbTimer.ImageAlign = ContentAlignment.MiddleRight;
-            lbTimer.Location = new Point(253, 34);
+            lbTimer.Location = new Point(553, 34);
             lbTimer.Name = "lbTimer";
             lbTimer.Size = new Size(221, 60);
             lbTimer.TabIndex = 1;
@@ -67,9 +67,9 @@
             // 
             btStop.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btStop.Font = new Font("Yu Gothic UI", 9F, FontStyle.Bold);
-            btStop.Location = new Point(480, 34);
+            btStop.Location = new Point(729, 34);
             btStop.Name = "btStop";
-            btStop.Size = new Size(60, 60);
+            btStop.Size = new Size(90, 90);
             btStop.TabIndex = 2;
             btStop.Text = "| |";
             btStop.UseVisualStyleBackColor = true;
@@ -80,9 +80,9 @@
             pnBlock.Anchor = AnchorStyles.Bottom;
             pnBlock.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             pnBlock.BorderStyle = BorderStyle.Fixed3D;
-            pnBlock.Location = new Point(40, 110);
+            pnBlock.Location = new Point(70, 170);
             pnBlock.Name = "pnBlock";
-            pnBlock.Size = new Size(504, 504);
+            pnBlock.Size = new Size(758, 758);
             pnBlock.TabIndex = 3;
             // 
             // timer
@@ -92,8 +92,9 @@
             // 
             // Form1
             // 
-            AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(574, 629);
+            AutoScaleDimensions = new SizeF(192F, 192F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            ClientSize = new Size(874, 979);
             Controls.Add(pnBlock);
             Controls.Add(btStop);
             Controls.Add(lbTimer);
