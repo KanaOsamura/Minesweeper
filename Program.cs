@@ -27,28 +27,13 @@ namespace Minesweeper
         public const int SCORE_DECREASE = 3;
         public const int SCORE_FLOGBUUNUS = 100;
 
-        public const int BLOCKNUM_H = 5;
-        public const int BLOCKNUM_W = 5;
+        public const int BLOCKNUM_H = 10;
+        public const int BLOCKNUM_W = 10;
 
-        private const int PANNNEL_SPACE = 50;
-        private const int PANNEL_SPACE_TOP = 120;
+        public const int PANNNEL_SPACE = 50;
+        public const int PANNEL_SPACE_TOP = 250;
 
-        public static int panelSpace
-        {
-            get
-            {
-                return (int)(PANNNEL_SPACE * screenRate);
-            }
-        }
-        public static int panelSpaceTop
-        {
-            get
-            {
-                return (int)(PANNEL_SPACE_TOP * screenRate);
-            }
-        }
-
-        private const int MINENUM = 3;
+        private const int MINENUM = 10;
         public static int mineNum
         {
             get
@@ -60,12 +45,7 @@ namespace Minesweeper
             }
         }
 
-        private const double FHD_WIDTH = 1920;
-
-#pragma warning disable CS8602 // null 参照の可能性があるものの逆参照です。
-        public static Double screenRate { get { return Screen.PrimaryScreen.Bounds.Width / FHD_WIDTH; } }
-        private const int BLOCK_SIZE_MIN = 30;
-        public static int blockSizeMin { get { return (int)(BLOCK_SIZE_MIN * screenRate); } }
+        public const int BLOCK_SIZE_MIN = 30;
 
 
         public static int blocksNum { get { return BLOCKNUM_H * BLOCKNUM_W; } }

@@ -224,52 +224,50 @@ namespace Minesweeper
         }
 
         /// <summary>
-        /// ブロックの個数と画面の解像度に応じたformの比率変更
+        /// ブロックの個数に応じた比率変更
         /// </summary>
         private void ResizeUI()
         {
-
-
-            pnBlockSize = new Size((int)(pnBlock.Size.Width * Program.screenRate), (int)(pnBlock.Size.Height * Program.screenRate));
+            pnBlockSize = new Size(pnBlock.Size.Width, pnBlock.Size.Height);
 
             int width;
-            int heigth;
+            int height;
             Double blockNumW = Program.BLOCKNUM_W, blockNumH = Program.BLOCKNUM_H;
 
-            if (pnBlockSize.Width / blockNumW < Program.blockSizeMin ||
-               pnBlockSize.Height / blockNumH < Program.blockSizeMin)
+            if (pnBlockSize.Width / blockNumW < Program.BLOCK_SIZE_MIN ||
+               pnBlockSize.Height / blockNumH < Program.BLOCK_SIZE_MIN)
             {
-                width = Program.blockSizeMin * (int)blockNumW;
-                heigth = Program.blockSizeMin * (int)blockNumH;
+                width = Program.BLOCK_SIZE_MIN * (int)blockNumW;
+                height = Program.BLOCK_SIZE_MIN * (int)blockNumH;
             }
             else
             {
                 if (blockNumW > blockNumH)
                 {
                     width = pnBlockSize.Width;
-                    heigth = (int)(pnBlockSize.Height * blockNumH / blockNumW);
+                    height = (int)(pnBlockSize.Height * blockNumH / blockNumW);
                 }
                 else
                 {
                     width = (int)(pnBlockSize.Width * blockNumW / blockNumH);
-                    heigth = pnBlockSize.Height;
+                    height = pnBlockSize.Height;
                 }
             }
 
-            //   pnBlock.Location = new Point((int)(35 * resize_W), (int)(121 * resize_H));
-            pnBlock.Size = new Size(width - width % Program.BLOCKNUM_W, heigth - heigth % Program.BLOCKNUM_H);
+            pnBlock.Size = new Size(width - width % Program.BLOCKNUM_W, height - height % Program.BLOCKNUM_H);
 
-            width = pnBlock.Width + Program.panelSpace * 2;
-            heigth = pnBlock.Height + Program.panelSpace + Program.panelSpaceTop;
-            if (width < pnBlockSize.Width + Program.panelSpace * 2) width = pnBlockSize.Width + Program.panelSpace * 2;
-            if (heigth < pnBlockSize.Height) heigth = pnBlockSize.Height;
-            this.Size = new Size(width, heigth);
+            width = pnBlock.Width + Program.PANNNEL_SPACE * 2;
+            height = pnBlock.Height + Program.PANNNEL_SPACE + Program.PANNEL_SPACE_TOP;
+            if (width < pnBlockSize.Width + Program.PANNNEL_SPACE * 2) width = pnBlockSize.Width + Program.PANNNEL_SPACE * 2;
+            if (height < pnBlockSize.Height) height = pnBlockSize.Height;
+            this.Size = new Size(width, height);
 
-            pnBlock.Location = new Point(width / 2 - pnBlock.Size.Width / 2, Program.panelSpaceTop);
+            pnBlock.Location = new Point(width / 2 - pnBlock.Size.Width / 2, Program.PANNEL_SPACE_TOP);
 
-            btStart.Location = new Point(Program.panelSpace, btStart.Location.Y);
+            btStart.Location = new Point(Program.PANNNEL_SPACE, btStart.Location.Y);
 
         }
+
 
 
         /// <summary>
