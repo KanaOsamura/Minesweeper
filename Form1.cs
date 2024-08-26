@@ -1,0 +1,415 @@
+﻿using Microsoft.Data.SqlClient;
+using System;
+using System.Net;
+using System.Timers;
+
+namespace Minesweeper
+{
+
+
+    public partial class Form1 : Form
+    {
+        private Double playTime = 0;
+        private Block[][] blocks;
+
+        private int score = 0;
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            ResizeUI();
+
+            Size size = new Size(pnBlock.Size.Width / Program.BLOCKNUM_W, pnBlock.Size.Height / Program.BLOCKNUM_H);//ブロックのサイズ
+            blocks = new Block[Program.BLOCKNUM_W][];
+
+            for (int i = 0; i < blocks.Length; i++)
+            {
+                blocks[i] = new Block[Program.BLOCKNUM_H];
+
+                for (int j = 0; j < blocks[i].Length; j++)
+                {
+                    blocks[i][j] = new Block(i, j, size, pnBlock);
+                    blocks[i][j].Click += Block_Click;
+                }
+            }
+
+            Program.endDel += new StepDel(EndGame);
+
+            EnabledUI(true);
+
+        }
+
+        private void BtStart_Click(object sender, EventArgs e)
+        {
+
+            if (Program.startDel == null) return;
+            EnabledUI(false);
+            playTime = 0;
+            timer.Start();
+
+            Program.startDel();
+
+            SetMine();
+            Program.step = Step.PLAY;
+
+            Program.openBlockNum = 0;
+            Program.flagNum = 0;
+            Program.collectFlagNum = 0;
+
+        }
+
+        private void BtStop_Click(object sender, EventArgs e)
+        {
+            if (Program.step == Step.PLAY)
+            {
+                btStop.Text = "▶";
+                Program.step = Step.STOP;
+            }
+            else if (Program.step == Step.STOP)
+            {
+                btStop.Text = "| |";
+                Program.step = Step.PLAY;
+            }
+        }
+
+
+        public void Block_Click(object? sender, EventArgs e)
+        {
+            if (Program.step != Step.PLAY) return;
+
+            MouseEventArgs click = (MouseEventArgs)e;
+            if (sender == null) return;
+            Block block = (Block)sender;
+
+            Program.clickAddress = block.address;
+
+            if (block.canClick_L && click.Button == MouseButtons.Left)//左クリック可能か
+            {
+                OpenBlock(block, true);
+            }
+            else if (block.canClick_R && click.Button == MouseButtons.Right)
+            {
+                block.SetMark();
+            }
+        }
+
+
+        /// <summary>
+        ///  ブロックが爆弾ではないとき周囲の、まだ空いていないかつブロック自身と周囲8つのブロックが爆弾ではないブロックを空ける
+        /// </summary>
+        /// <param name="block"></param>
+        private void OpenBlock(Block block, bool click = false)
+        {
+            int[] address = block.address;
+            int[] checkAddress = new int[2];
+
+
+            Block? checkBlock;
+            List<Block> checkBlocks = new List<Block>();
+
+            int aroundMine = 0;
+
+
+            if (Program.step != Step.PLAY && (int)block.type > 2) return;
+
+            if (block.insideBlock == BlockType.ans_blank)
+            {
+
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        if (i == 0 && j == 0) continue;
+                        checkAddress[0] = address[0] + i;
+                        checkAddress[1] = address[1] + j;
+
+                        if (checkAddress[0] >= 0 && checkAddress[0] < blocks.Length &&
+                            checkAddress[1] >= 0 && checkAddress[1] < blocks[0].Length)
+                        {
+                            checkBlock = blocks[checkAddress[0]][checkAddress[1]];
+                            if (checkBlock.insideBlock == BlockType.ans_mine)
+                            {
+                                aroundMine++;
+                            }
+                            else
+                            {
+                                checkBlocks.Add(checkBlock);
+                            }
+                        }
+                    }
+                }
+
+                if (block.type == BlockType.btn_flag) Program.flagNum--;
+                block.type = block.insideBlock;
+
+                block.Image = BlockImages.SetImage(block.type, aroundMine);
+                Program.openBlockNum++;
+                Program.ClearCheck();
+
+                if (aroundMine == 0)
+                {
+                    foreach (var openBlock in checkBlocks)
+                    {
+                        if ((int)openBlock.type <= 2) OpenBlock(openBlock);
+                    }
+                }
+            }
+            else if (block.insideBlock == BlockType.ans_mine)
+            {
+                block.type = block.insideBlock;
+                block.Image = BlockImages.SetImage(block.type);
+                Program.step = Step.GAMEOVER;
+                if (Program.endDel != null) Program.endDel();
+            }
+
+        }
+
+
+        /// <summary>
+        /// タイマーのUIを更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (Program.step == Step.PLAY)
+            {
+                playTime += 0.01;
+                lbTimer.Text = TimeText(playTime);
+            }
+        }
+
+        /// <summary>
+        /// 時間の表記を変更
+        /// </summary>
+        /// <param name="playTime"></param>
+        /// <returns></returns>
+        private string TimeText(Double playTime)
+        {
+            string timeText = "";
+            int conversion = 0;
+
+            int division = 360;
+            AddText(false);
+
+            division = 60;
+            AddText(false);
+            timeText += playTime.ToString("00.00");
+
+            return timeText;
+
+
+            void AddText(bool must)
+            {
+                conversion = (int)playTime / division;
+                if (conversion > 0 || must)
+                {
+                    playTime %= division;
+
+                    timeText += conversion.ToString("00") + ":";
+                }
+            };
+        }
+        /// <summary>
+        /// ゲームの状態に応じてUIの更新
+        /// </summary>
+        /// <param name="start"></param>
+        private void EnabledUI(bool start)
+        {
+            btStart.Enabled = start;
+
+            lbTimer.Enabled = !start;
+            btStop.Enabled = !start;
+        }
+
+        /// <summary>
+        /// ブロックの個数と画面の解像度に応じたformの比率変更
+        /// </summary>
+        private void ResizeUI()
+        {
+
+
+            pnBlockSize = new Size((int)(pnBlock.Size.Width * Program.screenRate), (int)(pnBlock.Size.Height * Program.screenRate));
+
+            int width;
+            int heigth;
+            Double blockNumW = Program.BLOCKNUM_W, blockNumH = Program.BLOCKNUM_H;
+
+            if (pnBlockSize.Width / blockNumW < Program.blockSizeMin ||
+               pnBlockSize.Height / blockNumH < Program.blockSizeMin)
+            {
+                width = Program.blockSizeMin * (int)blockNumW;
+                heigth = Program.blockSizeMin * (int)blockNumH;
+            }
+            else
+            {
+                if (blockNumW > blockNumH)
+                {
+                    width = pnBlockSize.Width;
+                    heigth = (int)(pnBlockSize.Height * blockNumH / blockNumW);
+                }
+                else
+                {
+                    width = (int)(pnBlockSize.Width * blockNumW / blockNumH);
+                    heigth = pnBlockSize.Height;
+                }
+            }
+
+            //   pnBlock.Location = new Point((int)(35 * resize_W), (int)(121 * resize_H));
+            pnBlock.Size = new Size(width - width % Program.BLOCKNUM_W, heigth - heigth % Program.BLOCKNUM_H);
+
+            width = pnBlock.Width + Program.panelSpace * 2;
+            heigth = pnBlock.Height + Program.panelSpace + Program.panelSpaceTop;
+            if (width < pnBlockSize.Width + Program.panelSpace * 2) width = pnBlockSize.Width + Program.panelSpace * 2;
+            if (heigth < pnBlockSize.Height) heigth = pnBlockSize.Height;
+            this.Size = new Size(width, heigth);
+
+            pnBlock.Location = new Point(width / 2 - pnBlock.Size.Width / 2, Program.panelSpaceTop);
+
+            btStart.Location = new Point(Program.panelSpace, btStart.Location.Y);
+
+        }
+
+
+        /// <summary>
+        /// 終了条件を満たしたとき
+        /// </summary>
+        /// <param name="clear"></param>
+        private void EndGame()
+        {
+            timer.Stop();
+
+
+            EnabledUI(true);
+            //スコア
+
+            score = Program.SCORE_FLOGBUUNUS * Program.collectFlagNum;
+
+            string endText = "";
+
+            if (Program.step == Step.CLEAR)
+            {
+                endText = "CLEAR";
+                score += Program.SCORE_TIMEBUUNUS - Program.SCORE_DECREASE * (int)playTime;
+            }
+            else if (Program.step == Step.GAMEOVER) endText = "GAMEOVER";
+
+            WriteDatabase(DateTime.Now.ToString("yyyy/MM/dd HH:mm"), score, endText);
+
+
+            endText += $"\nSCORE : {score}\n------------------------------------------------{ReadDatabase()}";
+            MessageBox.Show(endText, "終了");
+        }
+
+
+
+        /// <summary>
+        /// Mineをランダムな位置に配置
+        /// </summary>
+        private void SetMine()
+        {
+            int mineNum = Program.mineNum;
+            Random rand = new Random();
+            Block mineBlock;
+
+            while (mineNum > 0)
+            {
+                mineBlock = blocks[rand.Next(0, blocks.Length)][rand.Next(0, blocks[0].Length)];
+                if (mineBlock.insideBlock != BlockType.ans_mine)
+                {
+                    mineBlock.insideBlock = BlockType.ans_mine;
+                    mineNum--;
+                }
+            }
+
+        }
+
+        
+
+        /// <summary>
+        /// データベースに新しいスコアを書き込む
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <param name="score"></param>
+        /// <param name="endText"></param>
+        private void WriteDatabase(string dateTime, int score, string endText)
+        {
+            using var cmd = new SqlCommand();
+
+            cmd.Connection = Rdb.Conn;
+            cmd.CommandType = System.Data.CommandType.Text;
+
+            cmd.CommandText = "INSERT INTO SCORE VALUES(@DATE,@SCORE,@ENDGAME);";
+            cmd.Parameters.AddWithValue("@DATE", dateTime.ToString());
+            cmd.Parameters.AddWithValue("@SCORE", score.ToString());
+            cmd.Parameters.AddWithValue("@ENDGAME", endText);
+
+            try
+            {
+                if (cmd.ExecuteNonQuery() > 0)
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM SCORE";
+
+
+                    if (cmd.ExecuteScalar() != null && (int)cmd.ExecuteScalar() > 10)//10件以上の場合
+                    {
+                        cmd.CommandText = "DELETE FROM SCORE WHERE"
+                                        + " DATE IN (SELECT TOP 1 DATE FROM SCORE ORDER BY SCORE ASC)"
+                                        + " AND SCORE IN (SELECT TOP 1 SCORE FROM SCORE ORDER BY SCORE ASC);";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Rdb.ErrorMessage(ex);
+            }
+        }
+
+
+        /// <summary>
+        /// スコアリストを読みこむ
+        /// </summary>
+        /// <returns></returns>
+        private string ReadDatabase()
+        {
+            string text = "";
+            int rank = 1;
+
+            using SqlCommand sql = Rdb.Conn.CreateCommand();
+            sql.CommandText = "SELECT * FROM SCORE ORDER BY SCORE DESC;";
+
+
+            try
+            {
+                if (sql.ExecuteNonQuery() < 0)
+                {
+                    using var reader = sql.ExecuteReader();//データが何件か読みこむ
+                    string date, scoreText, endText;
+                    int score;
+
+                    while (reader.Read())
+                    {
+                        date = (string)reader[0];
+                        score = (int)reader[1];
+                        scoreText = score.ToString();
+                        endText = (string)reader[2];
+
+                        text += $"\n{rank.ToString("00")} .  SCORE : {scoreText.PadLeft(5, '0')}  {endText.PadRight(7, '　')}  {date}";
+                        rank++;
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Rdb.ErrorMessage(ex);
+            }
+
+            return text;
+
+        }
+
+
+    }
+}
