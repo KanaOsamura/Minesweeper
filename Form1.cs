@@ -295,10 +295,7 @@ namespace Minesweeper
             }
             else if (Program.step == Step.GAMEOVER) endText = "GAMEOVER";
 
-            WriteDatabase(DateTime.Now.ToString("yyyy/MM/dd HH:mm"), score, endText);
-
-
-            endText += $"\nSCORE : {score}\n------------------------------------------------{ReadDatabase()}";
+            endText += $"\nSCORE : {score}";
             MessageBox.Show(endText, "終了");
         }
 
@@ -323,93 +320,7 @@ namespace Minesweeper
                 }
             }
 
-        }
-
-        
-
-        /// <summary>
-        /// データベースに新しいスコアを書き込む
-        /// </summary>
-        /// <param name="dateTime"></param>
-        /// <param name="score"></param>
-        /// <param name="endText"></param>
-        private void WriteDatabase(string dateTime, int score, string endText)
-        {
-            using var cmd = new SqlCommand();
-
-            cmd.Connection = Rdb.Conn;
-            cmd.CommandType = System.Data.CommandType.Text;
-
-            cmd.CommandText = "INSERT INTO SCORE VALUES(@DATE,@SCORE,@ENDGAME);";
-            cmd.Parameters.AddWithValue("@DATE", dateTime.ToString());
-            cmd.Parameters.AddWithValue("@SCORE", score.ToString());
-            cmd.Parameters.AddWithValue("@ENDGAME", endText);
-
-            try
-            {
-                if (cmd.ExecuteNonQuery() > 0)
-                {
-                    cmd.CommandText = "SELECT COUNT(*) FROM SCORE";
-
-
-                    if (cmd.ExecuteScalar() != null && (int)cmd.ExecuteScalar() > 10)//10件以上の場合
-                    {
-                        cmd.CommandText = "DELETE FROM SCORE WHERE"
-                                        + " DATE IN (SELECT TOP 1 DATE FROM SCORE ORDER BY SCORE ASC)"
-                                        + " AND SCORE IN (SELECT TOP 1 SCORE FROM SCORE ORDER BY SCORE ASC);";
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (SqlException ex)
-            {
-                Rdb.ErrorMessage(ex);
-            }
-        }
-
-
-        /// <summary>
-        /// スコアリストを読みこむ
-        /// </summary>
-        /// <returns></returns>
-        private string ReadDatabase()
-        {
-            string text = "";
-            int rank = 1;
-
-            using SqlCommand sql = Rdb.Conn.CreateCommand();
-            sql.CommandText = "SELECT * FROM SCORE ORDER BY SCORE DESC;";
-
-
-            try
-            {
-                if (sql.ExecuteNonQuery() < 0)
-                {
-                    using var reader = sql.ExecuteReader();//データが何件か読みこむ
-                    string date, scoreText, endText;
-                    int score;
-
-                    while (reader.Read())
-                    {
-                        date = (string)reader[0];
-                        score = (int)reader[1];
-                        scoreText = score.ToString();
-                        endText = (string)reader[2];
-
-                        text += $"\n{rank.ToString("00")} .  SCORE : {scoreText.PadLeft(5, '0')}  {endText.PadRight(7, '　')}  {date}";
-                        rank++;
-                    }
-                }
-            }
-            catch (SqlException ex)
-            {
-                Rdb.ErrorMessage(ex);
-            }
-
-            return text;
-
-        }
-
+        }        
 
     }
 }
